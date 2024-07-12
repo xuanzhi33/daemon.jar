@@ -1,0 +1,6 @@
+spring:
+  profiles:
+    include: prod
+
+server:
+  port: 8346
