@@ -24,13 +24,13 @@ public class UpdateService {
     private String token;
 
 
-    @Value("${daemonJar.cmdList}")
+    @Value("${daemonJar.cmdList:ping,baidu.com}")
     private List<String> execCmdList;
 
-    @Value("${daemonJar.downloadUrl}")
+    @Value("${daemonJar.downloadUrl:https://www.baidu.com}")
     private String downloadUrl;
 
-    @Value("${daemonJar.downloadPath:server.jar}")
+    @Value("${daemonJar.downloadPath:index.html}")
     private String downloadPath;
 
     private Thread processThread;
