@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>cn.xuanzhi33</groupId>
 	<artifactId>daemonjar</artifactId>
-	<version>0.0.3</version>
+	<version>0.0.4</version>
 	<name>Daemon.jar</name>
 	<description>Automatically deploy and update the server using Github Actions.</description>
 	<url/>
