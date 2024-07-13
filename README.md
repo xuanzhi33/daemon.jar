@@ -21,6 +21,6 @@ java -jar daemonjar-x.x.x.jar
 ```
 5. Using the following command to update your server.
 ```shell
-curl https://your-ip:port/update?token=your_token
+curl "https://your-ip:port/update?token=your_token"
 ```
 6. It will download the latest version of the server program and restart it.
