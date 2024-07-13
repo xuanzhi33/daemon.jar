@@ -35,3 +35,4 @@ build/
 application-prod.yml
 
 /server.jar
+/test.html
