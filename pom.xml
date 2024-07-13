@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>cn.xuanzhi33</groupId>
 	<artifactId>daemonjar</artifactId>
-	<version>0.2.0</version>
+	<version>0.3.0</version>
 	<name>Daemon.jar</name>
 	<description>Automatically deploy and update the server using Github Actions.</description>
 	<url/>
@@ -43,15 +43,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webflux</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.projectreactor</groupId>
-			<artifactId>reactor-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

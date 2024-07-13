@@ -2,18 +2,10 @@ package cn.xuanzhi33.daemonjar;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.nio.channels.AsynchronousFileChannel;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 @Service
@@ -42,7 +34,7 @@ public class UpdateService {
         return token.equals(userToken);
     }
 
-    private void runCmd(List<String> cmdList) {
+    private Result runCmd(List<String> cmdList) {
         ProcessBuilder pb = new ProcessBuilder(cmdList);
         pb.redirectErrorStream(true);
         log.info("Execute command: {}", cmdList);
@@ -58,9 +50,11 @@ public class UpdateService {
 
             process.waitFor();
             log.info("Execute command finished: {}", cmdList);
+            return Result.success();
         } catch (Exception e) {
             log.error("Execute command error: ", e);
             log.error("Command: {}", cmdList);
+            return Result.error(500, "Execute command error");
         }
     }
 
@@ -97,26 +91,7 @@ public class UpdateService {
     }
 
     public synchronized Result downloadFile(String url) {
-        WebClient webClient = WebClient.create();
-        Flux<DataBuffer> dataBufferFlux = webClient.get()
-                .uri(url)
-                .retrieve()
-                .bodyToFlux(DataBuffer.class);
-
-        Path path = Paths.get(downloadPath);
-
-        try (AsynchronousFileChannel channel = AsynchronousFileChannel.open(path,
-                StandardOpenOption.CREATE,
-                StandardOpenOption.WRITE,
-                StandardOpenOption.TRUNCATE_EXISTING)) { // 如果文件存在，清空文件内容
-            DataBufferUtils.write(dataBufferFlux, channel)
-                    .doOnComplete(() -> log.info("Download file finished"))
-                    .blockLast();
-            return Result.success();
-        } catch (Exception e) {
-            log.error("Download file error: ", e);
-            return Result.error(500, "Download file error: " + e.getMessage());
-        }
+        return runCmd(List.of("wget", "-O", downloadPath, url));
     }
 
     public synchronized Result updateServer() {
