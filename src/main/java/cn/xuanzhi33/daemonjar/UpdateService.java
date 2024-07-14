@@ -77,7 +77,10 @@ public class UpdateService {
             return;
         }
 
-        process.destroy();
+        String pid = String.valueOf(process.pid());
+
+        runCmd(List.of("kill", pid));
+
         try {
             processThread.join();
         } catch (InterruptedException e) {
