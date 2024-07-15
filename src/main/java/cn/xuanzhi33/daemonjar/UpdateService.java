@@ -5,7 +5,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 @Service
@@ -17,7 +24,7 @@ public class UpdateService {
 
 
     @Value("${daemonJar.cmd:ping,baidu.com}")
-    private List<String> execCmdList;
+    private List<String> cmdList;
 
     @Value("${daemonJar.url:https://www.baidu.com}")
     private String downloadUrl;
@@ -27,34 +34,34 @@ public class UpdateService {
 
     private Thread processThread;
     private Boolean isRunning = false;
-    private Process process;
+    private Process jarProcess;
 
 
     public boolean checkToken(String userToken) {
         return token.equals(userToken);
     }
 
-    private Result runCmd(List<String> cmdList) {
+    private void runCmd() {
         ProcessBuilder pb = new ProcessBuilder(cmdList);
         pb.redirectErrorStream(true);
         log.info("Execute command: {}", cmdList);
         try {
-            process = pb.start();
+            jarProcess = pb.start();
             // 获取标准输出，并打印出来
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(jarProcess.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    log.info(line);
+                    System.out.println(line);
                 }
             }
 
-            process.waitFor();
+            jarProcess.waitFor();
             log.info("Execute command finished: {}", cmdList);
-            return Result.success();
+            Result.success();
         } catch (Exception e) {
             log.error("Execute command error: ", e);
             log.error("Command: {}", cmdList);
-            return Result.error(500, "Execute command error");
+            Result.error(500, "Execute command error");
         }
     }
 
@@ -65,7 +72,7 @@ public class UpdateService {
         isRunning = true;
 
         processThread = new Thread(() -> {
-            runCmd(execCmdList);
+            runCmd();
             isRunning = false;
         });
         processThread.start();
@@ -77,9 +84,7 @@ public class UpdateService {
             return;
         }
 
-        String pid = String.valueOf(process.pid());
-
-        runCmd(List.of("kill", pid));
+        jarProcess.destroy();
 
         try {
             processThread.join();
@@ -94,7 +99,25 @@ public class UpdateService {
     }
 
     public synchronized Result downloadFile(String url) {
-        return runCmd(List.of("wget", "-O", downloadPath, url));
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            Path filePath = Path.of(downloadPath);
+            boolean isDeleted = Files.deleteIfExists(filePath);
+            if (isDeleted) {
+                log.info("Deleted file: {}", filePath);
+            }
+
+            log.info("Start download file: {}", url);
+            var request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .build();
+            client.send(request,
+                    HttpResponse.BodyHandlers.ofFile(filePath));
+            log.info("Download file finished: {}", filePath);
+            return Result.success();
+        } catch (IOException | InterruptedException e) {
+            log.error("Download file error: ", e);
+            return Result.error(500, "Download file error");
+        }
     }
 
     public synchronized Result updateServer() {
